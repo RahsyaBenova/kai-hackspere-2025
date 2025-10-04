@@ -223,11 +223,7 @@ cd kai-assistant-app
 # Install dependencies
 npm install
 
-# Create environment file
-cp .env.example .env
-
-# Add your Gemini API key to .env
-echo "VITE_GEMINI_API_KEY=your_api_key_here" >> .env
+# Add your Gemini API key 
 
 # Start development server
 npm run dev
@@ -432,8 +428,8 @@ This project is open for future developing together.
 - **Email**: muhammmad.ghiffari@student.president.ac.id
 - **Email**: crishabel.wijaya@student.president.ac.id
 - **Documentation**: [Full Documentation](docs/)
-- **Issues**: [GitHub Issues](https://github.com/your-team/kai-hackathon-2025/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-team/kai-hackathon-2025/discussions)
+- **Issues**: [GitHub Issues](https://github.com/your-team/kai-hacksphere-2025/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-team/kai-hacksphere-2025/discussions)
 
 ---
 
@@ -441,7 +437,9 @@ This project is open for future developing together.
 
 **Made with 🐈 for KAI Hackathon 2025**
 
-[![Star this repo](https://img.shields.io/github/stars/your-team/kai-hackathon-2025?style=social)](https://github.com/your-team/kai-hackathon-2025)
-[![Follow us](https://img.shields.io/github/followers/your-team?style=social)](https://github.com/your-team)
+[![Star this repo](https://img.shields.io/github/stars/RahsyaBenova/kai-hacksphere-2025?style=social)](https://github.com/RahsyaBenova/kai-hacksphere-2025)
+[![Follow us](https://img.shields.io/github/followers/RahsyaBenova?style=social)](https://github.com/RahsyaBenova)
+[![Follow us](https://img.shields.io/github/followers/cristchaw?style=social)](https://github.com/cristchaw)
+[![Follow us](https://img.shields.io/github/followers/muhammadghiffari?style=social)](https://github.com/muhammadghiffari)
 
 </div>
