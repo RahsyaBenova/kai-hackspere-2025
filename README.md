@@ -399,9 +399,9 @@ kai-hackathon-2025/
 
 | Role | Name | GitHub |
 |------|------|--------|
-| 🎯 Project Lead | [Rahsya Benova Akbar] | [@RahsyaBenova](https://github.com/RahsyaBenova) |
-| 💻 Fullstack Dev | [Name] | [@muhammadghiffari](https://github.com/muhammadghiffari) |
-| 🔗 Blockchain & Security | [Crishabel Wijaya] | [@cristchaw](https://github.com/cristchaw) |
+| 🎯 Project Lead | Rahsya Benova Akbar | [@RahsyaBenova](https://github.com/RahsyaBenova) |
+| 💻 Fullstack Dev | Muhammad Ghiffari | [@muhammadghiffari](https://github.com/muhammadghiffari) |
+| 🔗 Blockchain & Security Dev | Crishabel Wijaya | [@cristchaw](https://github.com/cristchaw) |
 
 
 </div>
