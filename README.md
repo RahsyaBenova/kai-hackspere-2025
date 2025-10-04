@@ -100,7 +100,6 @@ The **KAI Intelligent Ticketing Platform** is a next-generation train ticket boo
 
 ### Application Interface
 
-> **Note**: Replace these placeholder links with actual screenshots/videos from your application
 
 ```
 ![Homepage](docs/images/homepage.png)
