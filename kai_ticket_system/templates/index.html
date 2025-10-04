@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Beranda - KAI E-Ticket{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center text-white py-5 mb-5" style="background: linear-gradient(135deg, var(--kai-primary), var(--kai-secondary)); border-radius: 0 0 50px 50px;">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-3">Selamat Datang di KAI E-Ticket</h1>
+        <p class="lead mb-4">Sistem pemesanan tiket kereta api modern dengan verifikasi keamanan berbasis wajah</p>
+        <a href="{{ url_for('booking') }}" class="btn btn-light btn-lg px-5 py-3 fw-bold">
+            <i class="fas fa-ticket-alt me-2"></i>Pesan Tiket Sekarang
+        </a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row text-center mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0">
+                <div class="card-body">
+                    <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                    <h4>Anti Joki Tiket</h4>
+                    <p class="text-muted">Verifikasi wajah untuk mencegah penjualan tiket ilegal</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0">
+                <div class="card-body">
+                    <i class="fas fa-bolt fa-3x text-primary mb-3"></i>
+                    <h4>Proses Cepat</h4>
+                    <p class="text-muted">Pemesanan dan verifikasi hanya dalam hitungan menit</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0">
+                <div class="card-body">
+                    <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+                    <h4>Tiket Digital</h4>
+                    <p class="text-muted">Bawa tiket dalam smartphone, praktis dan ramah lingkungan</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-route me-2"></i>Rute Tersedia</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for route in routes %}
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex justify-content-between align-items-center p-3 border rounded">
+                                <div>
+                                    <h6 class="mb-1">{{ route.origin }} - {{ route.destination }}</h6>
+                                    <small class="text-muted">Rp {{ "{:,}".format(route.base_price) }}</small>
+                                </div>
+                                <a href="{{ url_for('booking') }}" class="btn btn-kai-primary btn-sm">Pesan</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

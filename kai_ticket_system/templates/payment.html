@@ -1,0 +1,577 @@
+{% extends "base.html" %}
+
+{% block title %}Pembayaran - KAI{% endblock %}
+
+{% block content %}
+<div class="step-indicator">
+    <div class="step completed">
+        <div class="step-number">1</div>
+        <div>Pesan Tiket</div>
+    </div>
+    <div class="step active">
+        <div class="step-number">2</div>
+        <div>Pembayaran</div>
+    </div>
+    <div class="step">
+        <div class="step-number">3</div>
+        <div>Verifikasi</div>
+    </div>
+    <div class="step">
+        <div class="step-number">4</div>
+        <div>E-Ticket</div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-credit-card me-2"></i>Pembayaran Tiket</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Ticket Summary -->
+                    <div class="ticket-summary mb-4">
+                        <h5>Ringkasan Tiket</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Nama Penumpang:</strong> {{ ticket.passenger_name }}</p>
+                                <p><strong>Rute:</strong> {{ ticket.schedule.route.origin }} - {{ ticket.schedule.route.destination }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Tanggal:</strong> {{ ticket.schedule.departure_time }}</p>
+                                <p><strong>Kelas:</strong> {{ ticket.travel_class }}</p>
+                            </div>
+                        </div>
+                        <div class="total-price text-end mt-3">
+                            <h4 class="text-success">Total: Rp {{ "{:,}".format(ticket.total_price) }}</h4>
+                        </div>
+                    </div>
+
+                    <!-- Payment Methods -->
+                    <div class="payment-methods mb-4">
+                        <h5>Metode Pembayaran</h5>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <div class="card payment-method-card" data-method="credit_card">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-credit-card fa-2x mb-2"></i>
+                                        <p>Kartu Kredit</p>
+                                        <small class="text-muted">Tradisional</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card payment-method-card" data-method="bank_transfer">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-university fa-2x mb-2"></i>
+                                        <p>Transfer Bank</p>
+                                        <small class="text-muted">Tradisional</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card payment-method-card" data-method="ewallet">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-mobile-alt fa-2x mb-2"></i>
+                                        <p>E-Wallet</p>
+                                        <small class="text-muted">Tradisional</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card payment-method-card blockchain-payment" data-method="blockchain">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-link fa-2x mb-2 text-primary"></i>
+                                        <p>Blockchain</p>
+                                        <small class="text-primary">Transparan & Aman</small>
+                                        <div class="blockchain-badge">
+                                            <span class="badge bg-primary">NEW</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blockchain Payment Options -->
+                    <div id="blockchain-payment-options" class="blockchain-payment-section" style="display: none;">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Pembayaran Blockchain</h6>
+                            <p class="mb-0">Pembayaran menggunakan blockchain memberikan transparansi penuh, keamanan tinggi, dan tiket NFT yang dapat diverifikasi.</p>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="fab fa-ethereum me-2"></i>Ethereum (ETH)</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="crypto-payment-info">
+                                            <p><strong>Jumlah:</strong> <span id="eth-amount">0.00 ETH</span></p>
+                                            <p><strong>Gas Fee:</strong> <span id="eth-gas">~0.001 ETH</span></p>
+                                            <p><strong>Total:</strong> <span id="eth-total">0.00 ETH</span></p>
+                                        </div>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="connectWallet('ethereum')">
+                                            <i class="fas fa-wallet me-1"></i>Connect Wallet
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="fab fa-bitcoin me-2"></i>Bitcoin (BTC)</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="crypto-payment-info">
+                                            <p><strong>Jumlah:</strong> <span id="btc-amount">0.00 BTC</span></p>
+                                            <p><strong>Network Fee:</strong> <span id="btc-fee">~0.0001 BTC</span></p>
+                                            <p><strong>Total:</strong> <span id="btc-total">0.00 BTC</span></p>
+                                        </div>
+                                        <button class="btn btn-outline-warning btn-sm" onclick="connectWallet('bitcoin')">
+                                            <i class="fas fa-wallet me-1"></i>Connect Wallet
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Blockchain Benefits -->
+                        <div class="blockchain-benefits mt-3">
+                            <h6>Keuntungan Pembayaran Blockchain:</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="benefit-item">
+                                        <i class="fas fa-shield-alt text-success me-2"></i>
+                                        <small>Keamanan Tinggi</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="benefit-item">
+                                        <i class="fas fa-eye text-info me-2"></i>
+                                        <small>Transparansi Penuh</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="benefit-item">
+                                        <i class="fas fa-gem text-primary me-2"></i>
+                                        <small>Tiket NFT</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blockchain Transaction Status -->
+                    <div id="blockchain-transaction-status" class="mt-4" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-link me-2"></i>Status Transaksi Blockchain</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="transaction-progress">
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar" role="progressbar" style="width: 0%" id="transaction-progress"></div>
+                                    </div>
+                                    <div class="transaction-steps">
+                                        <div class="step" id="step-1">
+                                            <i class="fas fa-circle text-muted"></i>
+                                            <span>Mempersiapkan Transaksi</span>
+                                        </div>
+                                        <div class="step" id="step-2">
+                                            <i class="fas fa-circle text-muted"></i>
+                                            <span>Menunggu Konfirmasi</span>
+                                        </div>
+                                        <div class="step" id="step-3">
+                                            <i class="fas fa-circle text-muted"></i>
+                                            <span>Mencatat di Blockchain</span>
+                                        </div>
+                                        <div class="step" id="step-4">
+                                            <i class="fas fa-circle text-muted"></i>
+                                            <span>Minting NFT Tiket</span>
+                                        </div>
+                                        <div class="step" id="step-5">
+                                            <i class="fas fa-circle text-muted"></i>
+                                            <span>Selesai</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="transaction-details" class="mt-3" style="display: none;">
+                                    <h6>Detail Transaksi:</h6>
+                                    <p><strong>Hash:</strong> <span id="tx-hash" class="font-monospace"></span></p>
+                                    <p><strong>Block:</strong> <span id="block-number"></span></p>
+                                    <p><strong>Gas Used:</strong> <span id="gas-used"></span></p>
+                                    <a href="#" id="blockchain-explorer-link" target="_blank" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-external-link-alt me-1"></i>Lihat di Blockchain Explorer
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Button -->
+                    <div class="text-center">
+                        <button id="pay-button" class="btn btn-kai-primary btn-lg">
+                            <i class="fas fa-lock me-2"></i>Bayar Sekarang
+                        </button>
+                    </div>
+
+                    <div class="alert alert-info mt-4">
+                        <small>
+                            <i class="fas fa-info-circle me-2"></i>
+                            Pembayaran diproses oleh Midtrans. Data kartu kredit Anda aman dan terenkripsi.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config.MIDTRANS_CLIENT_KEY }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const payButton = document.getElementById('pay-button');
+    let selectedMethod = 'credit_card';
+    let web3 = null;
+    let userAccount = null;
+
+    // Crypto price conversion (simplified - in production, use real API)
+    const cryptoRates = {
+        'ETH': 0.0004, // 1 IDR = 0.0004 ETH (example rate)
+        'BTC': 0.00000002 // 1 IDR = 0.00000002 BTC (example rate)
+    };
+
+    // Update crypto amounts when blockchain payment is selected
+    function updateCryptoAmounts() {
+        const ticketPrice = {{ ticket.total_price }};
+        const ethAmount = (ticketPrice * cryptoRates.ETH).toFixed(6);
+        const btcAmount = (ticketPrice * cryptoRates.BTC).toFixed(8);
+        
+        document.getElementById('eth-amount').textContent = ethAmount + ' ETH';
+        document.getElementById('eth-total').textContent = (parseFloat(ethAmount) + 0.001).toFixed(6) + ' ETH';
+        document.getElementById('btc-amount').textContent = btcAmount + ' BTC';
+        document.getElementById('btc-total').textContent = (parseFloat(btcAmount) + 0.0001).toFixed(8) + ' BTC';
+    }
+
+    // Payment method selection
+    document.querySelectorAll('.payment-method-card').forEach(card => {
+        card.addEventListener('click', function() {
+            document.querySelectorAll('.payment-method-card').forEach(c => {
+                c.classList.remove('border-primary');
+            });
+            this.classList.add('border-primary');
+            selectedMethod = this.dataset.method;
+            
+            // Show/hide blockchain payment options
+            const blockchainOptions = document.getElementById('blockchain-payment-options');
+            if (selectedMethod === 'blockchain') {
+                blockchainOptions.style.display = 'block';
+                updateCryptoAmounts();
+            } else {
+                blockchainOptions.style.display = 'none';
+            }
+        });
+    });
+
+    // Connect wallet function
+    window.connectWallet = async function(blockchain) {
+        try {
+            if (blockchain === 'ethereum') {
+                if (typeof window.ethereum !== 'undefined') {
+                    web3 = new Web3(window.ethereum);
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const accounts = await web3.eth.getAccounts();
+                    userAccount = accounts[0];
+                    
+                    alert('Wallet terhubung: ' + userAccount.substring(0, 6) + '...' + userAccount.substring(38));
+                    
+                    // Enable payment button
+                    payButton.disabled = false;
+                    payButton.innerHTML = '<i class="fas fa-link me-2"></i>Bayar dengan Blockchain';
+                } else {
+                    alert('Metamask tidak terdeteksi. Silakan install Metamask terlebih dahulu.');
+                }
+            } else if (blockchain === 'bitcoin') {
+                alert('Fitur Bitcoin akan segera tersedia. Gunakan Ethereum untuk saat ini.');
+            }
+        } catch (error) {
+            console.error('Wallet connection error:', error);
+            alert('Gagal menghubungkan wallet: ' + error.message);
+        }
+    };
+
+    // Blockchain transaction progress
+    function updateTransactionProgress(step) {
+        const progressBar = document.getElementById('transaction-progress');
+        const steps = document.querySelectorAll('.transaction-steps .step');
+        
+        // Update progress bar
+        const progress = (step / 5) * 100;
+        progressBar.style.width = progress + '%';
+        
+        // Update step indicators
+        for (let i = 1; i <= step; i++) {
+            const stepElement = document.getElementById(`step-${i}`);
+            const icon = stepElement.querySelector('i');
+            icon.className = 'fas fa-check-circle text-success';
+        }
+    }
+
+    // Show blockchain transaction status
+    function showBlockchainStatus() {
+        document.getElementById('blockchain-transaction-status').style.display = 'block';
+        updateTransactionProgress(1);
+    }
+
+    // Process blockchain payment
+    async function processBlockchainPayment() {
+        try {
+            showBlockchainStatus();
+            updateTransactionProgress(2);
+            
+            // Simulate blockchain transaction
+            const response = await fetch('/api/create_blockchain_payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ticket_id: '{{ ticket.id }}',
+                    payment_method: 'blockchain',
+                    wallet_address: userAccount,
+                    blockchain_type: 'ethereum'
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                updateTransactionProgress(3);
+                
+                // Simulate blockchain confirmation
+                setTimeout(() => {
+                    updateTransactionProgress(4);
+                    
+                    // Show transaction details
+                    document.getElementById('transaction-details').style.display = 'block';
+                    document.getElementById('tx-hash').textContent = data.tx_hash;
+                    document.getElementById('block-number').textContent = data.block_number;
+                    document.getElementById('gas-used').textContent = data.gas_used;
+                    document.getElementById('blockchain-explorer-link').href = `https://etherscan.io/tx/${data.tx_hash}`;
+                    
+                    updateTransactionProgress(5);
+                    
+                    // Redirect to success page
+                    setTimeout(() => {
+                        window.location.href = "{{ url_for('payment.payment_success', ticket_id=ticket.id) }}";
+                    }, 2000);
+                }, 3000);
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            console.error('Blockchain payment error:', error);
+            alert('Gagal memproses pembayaran blockchain: ' + error.message);
+            payButton.disabled = false;
+            payButton.innerHTML = '<i class="fas fa-lock me-2"></i>Bayar Sekarang';
+        }
+    }
+
+    payButton.addEventListener('click', function() {
+        if (selectedMethod === 'blockchain') {
+            if (!userAccount) {
+                alert('Silakan hubungkan wallet terlebih dahulu.');
+                return;
+            }
+            
+            payButton.disabled = true;
+            payButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses Blockchain...';
+            processBlockchainPayment();
+            return;
+        }
+
+        // Traditional payment methods
+        payButton.disabled = true;
+        payButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
+
+        fetch('/api/create_payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ticket_id: '{{ ticket.id }}',
+                payment_method: selectedMethod
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Redirect to Midtrans
+                window.snap.pay(data.token, {
+                    onSuccess: function(result) {
+                        window.location.href = "{{ url_for('payment.payment_success', ticket_id=ticket.id) }}";
+                    },
+                    onPending: function(result) {
+                        console.log('Payment pending:', result);
+                        alert('Pembayaran pending. Silakan selesaikan pembayaran.');
+                        payButton.disabled = false;
+                        payButton.innerHTML = '<i class="fas fa-lock me-2"></i>Bayar Sekarang';
+                    },
+                    onError: function(result) {
+                        console.log('Payment error:', result);
+                        alert('Terjadi error saat pembayaran. Silakan coba lagi.');
+                        payButton.disabled = false;
+                        payButton.innerHTML = '<i class="fas fa-lock me-2"></i>Bayar Sekarang';
+                    },
+                    onClose: function() {
+                        payButton.disabled = false;
+                        payButton.innerHTML = '<i class="fas fa-lock me-2"></i>Bayar Sekarang';
+                    }
+                });
+            } else {
+                alert('Gagal membuat transaksi: ' + data.message);
+                payButton.disabled = false;
+                payButton.innerHTML = '<i class="fas fa-lock me-2"></i>Bayar Sekarang';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi error. Silakan coba lagi.');
+            payButton.disabled = false;
+            payButton.innerHTML = '<i class="fas fa-lock me-2"></i>Bayar Sekarang';
+        });
+    });
+});
+</script>
+
+<style>
+.payment-method-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.payment-method-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.payment-method-card.border-primary {
+    border: 2px solid var(--kai-primary) !important;
+}
+
+.blockchain-payment {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.blockchain-payment:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.blockchain-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.blockchain-payment-section {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.crypto-payment-info p {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.transaction-progress {
+    margin-bottom: 1rem;
+}
+
+.transaction-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.transaction-steps .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.transaction-steps .step i {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.transaction-steps .step span {
+    color: #6c757d;
+}
+
+.transaction-steps .step i.text-success {
+    color: #28a745 !important;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #28a745, #20c997);
+    transition: width 0.3s ease;
+}
+
+#transaction-details {
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 1rem;
+}
+
+.font-monospace {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    background-color: #e9ecef;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+}
+
+.blockchain-explorer-link {
+    text-decoration: none;
+}
+
+.blockchain-explorer-link:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}

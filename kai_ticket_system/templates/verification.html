@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Verifikasi Wajah - KAI{% endblock %}
+
+{% block content %}
+<div class="step-indicator">
+    <div class="step completed">
+        <div class="step-number">1</div>
+        <div>Pesan Tiket</div>
+    </div>
+    <div class="step active">
+        <div class="step-number">2</div>
+        <div>Verifikasi Wajah</div>
+    </div>
+    <div class="step">
+        <div class="step-number">3</div>
+        <div>E-Ticket</div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-camera me-2"></i>Verifikasi Wajah</h4>
+                </div>
+                <div class="card-body">
+                    {% if booking_data %}
+                    <div class="booking-info alert alert-info mb-4">
+                        <h6><i class="fas fa-info-circle me-2"></i>Informasi Pemesanan</h6>
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <strong>Nama:</strong> {{ booking_data.passenger_name }}<br>
+                                <strong>Rute:</strong> {{ booking_data.route_name }}<br>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Tanggal:</strong> {{ booking_data.travel_date }}<br>
+                                <strong>Waktu:</strong> {{ booking_data.travel_time }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="camera-section text-center">
+                        <div class="instructions mb-4">
+                            <p class="text-muted">
+                                <i class="fas fa-lightbulb me-2"></i> 
+                                <strong>Panduan Verifikasi:</strong> Pastikan wajah terlihat jelas dengan pencahayaan yang baik
+                            </p>
+                        </div>
+                        
+                        <div id="camera-container" class="mb-4">
+                            <div class="camera-frame position-relative d-inline-block">
+                                <video id="video" width="400" height="300" autoplay playsinline 
+                                       class="border rounded shadow-sm"></video>
+                                <canvas id="canvas" style="display:none;"></canvas>
+                                <div class="camera-overlay">
+                                    <div class="face-guide"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="camera-controls">
+                            <button id="capture-btn" class="btn btn-kai-primary btn-lg">
+                                <i class="fas fa-camera me-2"></i>Ambil Foto untuk Verifikasi
+                            </button>
+                            <button id="retry-btn" class="btn btn-outline-secondary btn-lg" style="display:none;">
+                                <i class="fas fa-redo me-2"></i>Ulangi Verifikasi
+                            </button>
+                        </div>
+                        
+                        <div id="result-message" class="mt-4"></div>
+                        
+                        <div class="privacy-notice mt-4">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                <strong>Keamanan Data:</strong> Wajah Anda hanya digunakan untuk verifikasi boarding dan tidak disimpan
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('capture-btn');
+    const retryBtn = document.getElementById('retry-btn');
+    const resultMessage = document.getElementById('result-message');
+
+    let stream = null;
+
+    // Initialize camera
+    function initializeCamera() {
+        navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                facingMode: 'user'
+            } 
+        })
+        .then(cameraStream => {
+            stream = cameraStream;
+            video.srcObject = stream;
+            captureBtn.disabled = false;
+        })
+        .catch(err => {
+            console.error("Error accessing camera:", err);
+            showMessage(
+                '<div class="alert alert-warning">' +
+                '<i class="fas fa-exclamation-triangle"></i> Kamera tidak dapat diakses. ' +
+                'Pastikan Anda memberikan izin akses kamera.</div>',
+                false
+            );
+            captureBtn.disabled = true;
+        });
+    }
+
+    // Show message
+    function showMessage(message, isSuccess = null) {
+        resultMessage.innerHTML = message;
+        resultMessage.style.display = 'block';
+        
+        if (isSuccess === true) {
+            captureBtn.style.display = 'none';
+            retryBtn.style.display = 'inline-block';
+        } else if (isSuccess === false) {
+            captureBtn.style.display = 'inline-block';
+            retryBtn.style.display = 'inline-block';
+        }
+    }
+
+    // Capture photo
+    captureBtn.addEventListener('click', function() {
+        if (!stream) {
+            showMessage('<div class="alert alert-warning">Kamera belum siap</div>', false);
+            return;
+        }
+
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0);
+
+        // Show loading state
+        captureBtn.disabled = true;
+        captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
+
+        // Send to server
+        canvas.toBlob(blob => {
+            const formData = new FormData();
+            formData.append('face_image', blob);
+
+            fetch('/verify_face', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if(data.success) {
+                    showMessage(
+                        '<div class="alert alert-success">' +
+                        '<i class="fas fa-check-circle"></i> ' +
+                        '<strong>Verifikasi Berhasil!</strong><br>' +
+                        'Tiket Anda sedang diproses. Anda akan diarahkan ke halaman tiket...</div>',
+                        true
+                    );
+                    
+                    // Redirect to ticket page
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 2000);
+                } else {
+                    showMessage(
+                        '<div class="alert alert-danger">' +
+                        '<i class="fas fa-times-circle"></i> ' +
+                        '<strong>Verifikasi Gagal</strong><br>' +
+                        (data.message || 'Wajah tidak terdeteksi. Silakan coba lagi dengan pencahayaan yang lebih baik.') +
+                        '</div>',
+                        false
+                    );
+                    captureBtn.disabled = false;
+                    captureBtn.innerHTML = '<i class="fas fa-camera me-2"></i>Ambil Foto untuk Verifikasi';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage(
+                    '<div class="alert alert-danger">' +
+                    '<i class="fas fa-exclamation-triangle"></i> ' +
+                    '<strong>Terjadi Kesalahan</strong><br>' +
+                    'Silakan refresh halaman dan coba lagi.</div>',
+                    false
+                );
+                captureBtn.disabled = false;
+                captureBtn.innerHTML = '<i class="fas fa-camera me-2"></i>Ambil Foto untuk Verifikasi';
+            });
+        }, 'image/jpeg', 0.8);
+    });
+
+    // Retry verification
+    retryBtn.addEventListener('click', function() {
+        resultMessage.style.display = 'none';
+        retryBtn.style.display = 'none';
+        captureBtn.style.display = 'inline-block';
+        captureBtn.disabled = false;
+        captureBtn.innerHTML = '<i class="fas fa-camera me-2"></i>Ambil Foto untuk Verifikasi';
+        
+        // Restart camera if needed
+        if (!stream) {
+            initializeCamera();
+        }
+    });
+
+    // Initialize camera when page loads
+    initializeCamera();
+});
+</script>
+
+<style>
+.camera-frame {
+    position: relative;
+}
+
+.camera-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.face-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 250px;
+    border: 2px dashed rgba(255, 255, 255, 0.7);
+    border-radius: 45% 45% 50% 50%;
+    background: transparent;
+}
+
+.booking-info {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border: none;
+    border-left: 4px solid var(--kai-primary);
+}
+
+@media (max-width: 576px) {
+    #video {
+        width: 100%;
+        height: auto;
+        max-width: 300px;
+    }
+}
+</style>
+{% endblock %}

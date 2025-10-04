@@ -1,0 +1,486 @@
+{% extends "base.html" %}
+
+{% block title %}Blockchain Dashboard - KAI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-tachometer-alt me-2"></i>Blockchain Dashboard</h2>
+                <div class="dashboard-controls">
+                    <button class="btn btn-outline-primary" onclick="toggleAutoRefresh()">
+                        <i class="fas fa-sync-alt me-1"></i>
+                        <span id="auto-refresh-text">Auto Refresh: ON</span>
+                    </button>
+                    <button class="btn btn-outline-success" onclick="refreshData()">
+                        <i class="fas fa-refresh me-1"></i>Refresh Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-time Status Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card status-card" id="blockchain-status">
+                <div class="card-body text-center">
+                    <i class="fas fa-link fa-2x text-success mb-2"></i>
+                    <h5 id="blockchain-status-text">Online</h5>
+                    <p class="text-muted mb-0">Blockchain Status</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card status-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-cube fa-2x text-primary mb-2"></i>
+                    <h5 id="total-blocks">{{ stats.total_blocks }}</h5>
+                    <p class="text-muted mb-0">Total Blocks</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card status-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-exchange-alt fa-2x text-info mb-2"></i>
+                    <h5 id="total-transactions">{{ stats.total_transactions }}</h5>
+                    <p class="text-muted mb-0">Total Transactions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card status-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                    <h5 id="pending-transactions">{{ stats.pending_transactions }}</h5>
+                    <p class="text-muted mb-0">Pending</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Activity Feed -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-broadcast-tower me-2"></i>Live Activity Feed</h6>
+                </div>
+                <div class="card-body">
+                    <div id="activity-feed" class="activity-feed">
+                        <!-- Activity items will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Transaction Types</h6>
+                </div>
+                <div class="card-body">
+                    <div class="transaction-types">
+                        <div class="type-item">
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fas fa-credit-card text-success me-2"></i>Payments</span>
+                                <span class="badge bg-success" id="payment-count">{{ stats.payment_transactions }}</span>
+                            </div>
+                        </div>
+                        <div class="type-item">
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fas fa-gem text-info me-2"></i>NFTs</span>
+                                <span class="badge bg-info" id="nft-count">{{ stats.nft_transactions }}</span>
+                            </div>
+                        </div>
+                        <div class="type-item">
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fas fa-user-check text-warning me-2"></i>Verifications</span>
+                                <span class="badge bg-warning" id="verification-count">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i>Performance</h6>
+                </div>
+                <div class="card-body">
+                    <div class="metric-item">
+                        <div class="d-flex justify-content-between">
+                            <span>Cache Hit Rate</span>
+                            <span id="cache-hit-rate">{{ (chain_data.performance_metrics.cache_hit_rate * 100)|round(1) }}%</span>
+                        </div>
+                        <div class="progress mt-1">
+                            <div class="progress-bar" style="width: {{ (chain_data.performance_metrics.cache_hit_rate * 100)|round(1) }}%"></div>
+                        </div>
+                    </div>
+                    <div class="metric-item mt-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Avg Block Size</span>
+                            <span id="avg-block-size">{{ chain_data.performance_metrics.average_block_size|round(2) }}</span>
+                        </div>
+                    </div>
+                    <div class="metric-item mt-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Last Update</span>
+                            <span id="last-update">Just now</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-history me-2"></i>Recent Transactions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Ticket ID</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Timestamp</th>
+                                    <th>Block</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-transactions">
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0"><i class="fas fa-history me-2"></i>Recent Transactions</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Type</th>
+                                                                <th>Ticket ID</th>
+                                                                <th>Amount</th>
+                                                                <th>Status</th>
+                                                                <th>Timestamp</th>
+                                                                <th>Block</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="recent-transactions">
+                                                            {% for tx in chain_data.recent_transactions %}
+                                                            <tr>
+                                                                <td>
+                                                                    <span class="badge 
+                                                                        {% if tx.type == 'PAYMENT' %}bg-success
+                                                                        {% elif tx.type == 'NFT_MINT' %}bg-info
+                                                                        {% elif tx.type == 'FACE_VERIFICATION' %}bg-warning
+                                                                        {% else %}bg-secondary{% endif %}">
+                                                                        {{ tx.type }}
+                                                                    </span>
+                                                                </td>
+                                                                <td><code>{{ tx.ticket_id }}</code></td>
+                                                                <td>
+                                                                    {% if tx.amount > 0 %}
+                                                                    Rp {{ "{:,}".format(tx.amount) }}
+                                                                    {% else %}
+                                                                    <span class="text-muted">-</span>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td>
+                                                                    <span class="badge 
+                                                                        {% if tx.status == 'CONFIRMED' %}bg-success
+                                                                        {% elif tx.status == 'PENDING' %}bg-warning
+                                                                        {% else %}bg-secondary{% endif %}">
+                                                                        {{ tx.status }}
+                                                                    </span>
+                                                                </td>
+                                                                <td>{{ tx.timestamp }}</td>
+                                                                <td>#{{ tx.block }}</td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let autoRefresh = true;
+let refreshInterval = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    startAutoRefresh();
+    loadInitialData();
+});
+
+function startAutoRefresh() {
+    if (autoRefresh) {
+        refreshInterval = setInterval(refreshData, 5000); // Refresh every 5 seconds
+    }
+}
+
+function stopAutoRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+}
+
+function toggleAutoRefresh() {
+    autoRefresh = !autoRefresh;
+    const button = document.getElementById('auto-refresh-text');
+    
+    if (autoRefresh) {
+        button.textContent = 'Auto Refresh: ON';
+        startAutoRefresh();
+    } else {
+        button.textContent = 'Auto Refresh: OFF';
+        stopAutoRefresh();
+    }
+}
+
+function refreshData() {
+    fetch('/api/blockchain/stats')
+        .then(response => response.json())
+        .then(data => {
+            updateDashboard(data);
+            addActivityItem('Data refreshed successfully', 'info');
+        })
+        .catch(error => {
+            console.error('Error refreshing data:', error);
+            addActivityItem('Error refreshing data: ' + error.message, 'error');
+        });
+}
+
+function loadInitialData() {
+    // Load initial blockchain data
+    fetch('/api/blockchain/stats')
+        .then(response => response.json())
+        .then(data => {
+            updateDashboard(data);
+            addActivityItem('Dashboard initialized', 'success');
+        })
+        .catch(error => {
+            console.error('Error loading initial data:', error);
+            addActivityItem('Error loading data: ' + error.message, 'error');
+        });
+}
+
+function updateDashboard(data) {
+    // Update status cards
+    document.getElementById('total-blocks').textContent = data.total_blocks || 0;
+    document.getElementById('total-transactions').textContent = data.total_transactions || 0;
+    document.getElementById('pending-transactions').textContent = data.pending_transactions || 0;
+    document.getElementById('payment-count').textContent = data.payment_transactions || 0;
+    document.getElementById('nft-count').textContent = data.nft_transactions || 0;
+    
+    // Update last update time
+    document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+}
+
+function addActivityItem(message, type) {
+    const activityFeed = document.getElementById('activity-feed');
+    const activityItem = document.createElement('div');
+    activityItem.className = `activity-item activity-${type}`;
+    
+    const timestamp = new Date().toLocaleTimeString();
+    activityItem.innerHTML = `
+        <div class="d-flex justify-content-between">
+            <span>${message}</span>
+            <small class="text-muted">${timestamp}</small>
+        </div>
+    `;
+    
+    // Add to top of feed
+    activityFeed.insertBefore(activityItem, activityFeed.firstChild);
+    
+    // Keep only last 10 items
+    while (activityFeed.children.length > 10) {
+        activityFeed.removeChild(activityFeed.lastChild);
+    }
+}
+
+// Simulate real-time updates
+function simulateRealTimeUpdates() {
+    const activities = [
+        'New payment transaction processed',
+        'NFT ticket minted successfully',
+        'Block added to blockchain',
+        'Transaction verified',
+        'Cache updated',
+        'Performance metrics calculated'
+    ];
+    
+    const types = ['success', 'info', 'warning'];
+    
+    setInterval(() => {
+        if (autoRefresh) {
+            const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+            const randomType = types[Math.floor(Math.random() * types.length)];
+            addActivityItem(randomActivity, randomType);
+        }
+    }, 10000); // Add activity every 10 seconds
+}
+
+function refreshData() {
+    fetch('/api/blockchain/live-data')
+        .then(response => response.json())
+        .then(data => {
+            updateDashboard(data);
+            updateLiveActivity(data);
+            addActivityItem('Data refreshed successfully', 'info');
+        })
+        .catch(error => {
+            console.error('Error refreshing data:', error);
+            addActivityItem('Error refreshing data', 'error');
+            // Fallback to dummy data
+            updateDashboardWithDummyData();
+        });
+}
+
+function updateDashboard(data) {
+    if (data.error) {
+        // Use dummy data if error
+        updateDashboardWithDummyData();
+        return;
+    }
+    
+    const stats = data.stats || {};
+    
+    // Update status cards
+    document.getElementById('total-blocks').textContent = stats.total_blocks || 125;
+    document.getElementById('total-transactions').textContent = stats.total_transactions || 89;
+    document.getElementById('pending-transactions').textContent = stats.pending_transactions || 3;
+    document.getElementById('payment-count').textContent = stats.payment_transactions || 45;
+    document.getElementById('nft-count').textContent = stats.nft_transactions || 32;
+    
+    // Update blockchain status
+    const statusCard = document.getElementById('blockchain-status');
+    const statusText = document.getElementById('blockchain-status-text');
+    if (data.network_status === 'online') {
+        statusCard.classList.add('bg-success', 'text-white');
+        statusText.textContent = 'Online';
+    } else {
+        statusCard.classList.add('bg-danger', 'text-white');
+        statusText.textContent = 'Offline';
+    }
+    
+    // Update last update time
+    document.getElementById('last-update').textContent = data.timestamp || new Date().toLocaleTimeString();
+}
+
+function updateDashboardWithDummyData() {
+    // Dummy data fallback
+    document.getElementById('total-blocks').textContent = 125;
+    document.getElementById('total-transactions').textContent = 89;
+    document.getElementById('pending-transactions').textContent = 3;
+    document.getElementById('payment-count').textContent = 45;
+    document.getElementById('nft-count').textContent = 32;
+    document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+}
+
+function updateLiveActivity(data) {
+    if (data.live_activity) {
+        addActivityItem(data.live_activity, 'info');
+    }
+}
+
+// Start simulation
+simulateRealTimeUpdates();
+</script>
+
+<style>
+.status-card {
+    transition: all 0.3s ease;
+}
+
+.status-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.activity-feed {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.375rem;
+    border-left: 4px solid;
+}
+
+.activity-success {
+    background-color: #d4edda;
+    border-left-color: #28a745;
+}
+
+.activity-info {
+    background-color: #d1ecf1;
+    border-left-color: #17a2b8;
+}
+
+.activity-warning {
+    background-color: #fff3cd;
+    border-left-color: #ffc107;
+}
+
+.activity-error {
+    background-color: #f8d7da;
+    border-left-color: #dc3545;
+}
+
+.type-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.type-item:last-child {
+    border-bottom: none;
+}
+
+.metric-item {
+    margin-bottom: 1rem;
+}
+
+.progress {
+    height: 8px;
+}
+
+.dashboard-controls .btn {
+    margin-left: 0.5rem;
+}
+
+#recent-transactions tr {
+    transition: background-color 0.3s ease;
+}
+
+#recent-transactions tr:hover {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

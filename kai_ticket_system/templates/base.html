@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}KAI - Tiket Elektronik Berbasis Keamanan{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --kai-primary: #0056b3;
+            --kai-secondary: #003d82;
+            --kai-accent: #ff6b00;
+            --kai-success: #28a745;
+            --kai-light: #f8f9fa;
+            --kai-dark: #343a40;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--kai-primary), var(--kai-secondary));
+            box-shadow: 0 2px 15px rgba(0, 86, 179, 0.3);
+            padding: 1rem 0;
+        }
+        
+        .nav-logo h2 {
+            color: white !important;
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            margin: 0 0.5rem;
+            padding: 0.5rem 1rem !important;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: white !important;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem 0;
+        }
+        
+        .footer {
+            background: var(--kai-dark);
+            color: white;
+            padding: 2rem 0;
+            margin-top: auto;
+        }
+        
+        /* Blockchain Stats */
+        .blockchain-stats {
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        /* Live Activity */
+        .activity-feed {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            padding: 0.75rem;
+            border-left: 4px solid;
+            margin-bottom: 0.5rem;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .activity-success { border-left-color: #28a745; }
+        .activity-info { border-left-color: #17a2b8; }
+        .activity-warning { border-left-color: #ffc107; }
+        
+        /* Quick Actions */
+        .quick-action-card {
+            text-align: center;
+            padding: 2rem 1rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .quick-action-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .action-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Step Indicator */
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 3rem 0;
+            position: relative;
+        }
+        
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #e9ecef;
+            z-index: 1;
+        }
+        
+        .step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .step-number {
+            background: #e9ecef;
+            color: var(--kai-dark);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: 3px solid white;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active .step-number {
+            background: var(--kai-primary);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .step.completed .step-number {
+            background: var(--kai-success);
+            color: white;
+        }
+        
+        .step-label {
+            font-weight: 500;
+            color: #6c757d;
+        }
+        
+        .step.active .step-label {
+            color: var(--kai-primary);
+            font-weight: 600;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--kai-primary), var(--kai-secondary));
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1.5rem;
+            border: none;
+        }
+        
+        .btn-kai-primary {
+            background: linear-gradient(135deg, var(--kai-primary), var(--kai-secondary));
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 25px;
+            font-weight: 600;
+        }
+        
+        .btn-kai-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 86, 179, 0.4);
+            color: white;
+        }
+        
+        .ticket-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 2px solid var(--kai-primary);
+            border-radius: 20px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ticket-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(135deg, var(--kai-primary), var(--kai-accent));
+        }
+        
+        .qr-code {
+            max-width: 200px;
+            margin: 0 auto;
+            display: block;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 10px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                <h2><i class="fas fa-train"></i> KAI E-Ticket</h2>
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">
+                    <i class="fas fa-home"></i> Beranda
+                </a>
+                <a class="nav-link {% if request.endpoint == 'booking' %}active{% endif %}" href="{{ url_for('booking') }}">
+                    <i class="fas fa-ticket-alt"></i> Pesan Tiket
+                </a>
+                <a class="nav-link {% if request.endpoint == 'my_tickets' %}active{% endif %}" href="{{ url_for('my_tickets') }}">
+                    <i class="fas fa-list"></i> Tiket Saya
+                </a>
+                <a class="nav-link" href="/blockchain/explorer">
+                    <i class="fas fa-link"></i> Blockchain Explorer
+                </a>
+                <a class="nav-link" href="/blockchain/dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a class="nav-link {% if request.endpoint == 'about' %}active{% endif %}" href="{{ url_for('about') }}">
+                    <i class="fas fa-info-circle"></i> Tentang
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <main class="main-content">
+        <!-- Blockchain Live Stats -->
+        <div class="container">
+            <div class="blockchain-stats">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">142</div>
+                            <div class="stat-label">Total Blocks</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">89</div>
+                            <div class="stat-label">Transactions</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">45</div>
+                            <div class="stat-label">NFT Tickets</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">99.9%</div>
+                            <div class="stat-label">Uptime</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card quick-action-card">
+                        <div class="card-body">
+                            <div class="action-icon text-primary">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <h5>Fast Booking</h5>
+                            <p class="text-muted">Pesan tiket dalam 3 langkah mudah</p>
+                            <a href="{{ url_for('booking') }}" class="btn btn-kai-primary">Pesan Sekarang</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card quick-action-card">
+                        <div class="card-body">
+                            <div class="action-icon text-success">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h5>Secure Blockchain</h5>
+                            <p class="text-muted">Tiket tercatat di blockchain</p>
+                            <a href="/blockchain/explorer" class="btn btn-kai-primary">Explore</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card quick-action-card">
+                        <div class="card-body">
+                            <div class="action-icon text-warning">
+                                <i class="fas fa-qrcode"></i>
+                            </div>
+                            <h5>Digital Ticket</h5>
+                            <p class="text-muted">QR Code untuk boarding</p>
+                            <a href="{{ url_for('my_tickets') }}" class="btn btn-kai-primary">Lihat Tiket</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Activity Feed -->
+        <div class="container mt-4">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-broadcast-tower me-2"></i>Live Activity Feed</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-feed">
+                                <div class="activity-item activity-success">
+                                    <strong>New Block Mined</strong> - Block #142 added to chain
+                                    <small class="text-muted d-block">2 minutes ago</small>
+                                </div>
+                                <div class="activity-item activity-info">
+                                    <strong>Payment Processed</strong> - Ticket TKT-789 for Rp 150,000
+                                    <small class="text-muted d-block">5 minutes ago</small>
+                                </div>
+                                <div class="activity-item activity-warning">
+                                    <strong>NFT Minted</strong> - Digital ticket created for passenger
+                                    <small class="text-muted d-block">8 minutes ago</small>
+                                </div>
+                                <div class="activity-item activity-success">
+                                    <strong>Face Verified</strong> - Biometric verification completed
+                                    <small class="text-muted d-block">12 minutes ago</small>
+                                </div>
+                                <div class="activity-item activity-info">
+                                    <strong>Blockchain Sync</strong> - Network synchronized successfully
+                                    <small class="text-muted d-block">15 minutes ago</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Transaction Types</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Payment Transactions</span>
+                                    <span class="badge bg-success">52%</span>
+                                </div>
+                                <div class="progress mt-1">
+                                    <div class="progress-bar bg-success" style="width: 52%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>NFT Minting</span>
+                                    <span class="badge bg-info">35%</span>
+                                </div>
+                                <div class="progress mt-1">
+                                    <div class="progress-bar bg-info" style="width: 35%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Verifications</span>
+                                    <span class="badge bg-warning">13%</span>
+                                </div>
+                                <div class="progress mt-1">
+                                    <div class="progress-bar bg-warning" style="width: 13%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Status -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-server me-2"></i>System Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Blockchain Network</span>
+                                <span class="badge bg-success">Online</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Database</span>
+                                <span class="badge bg-success">Online</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Payment Gateway</span>
+                                <span class="badge bg-success">Online</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Face Recognition</span>
+                                <span class="badge bg-success">Online</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Block -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container text-center">
+            <p>
+                <i class="fas fa-train"></i> &copy; 2025 PT. Kereta Api Indonesia (Persero) - Sistem Keamanan Tiket Elektronik Berbasis Blockchain
+            </p>
+            <small class="text-muted">
+                Powered by Blockchain Technology | Secure & Transparent Ticketing
+            </small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auto Refresh Script -->
+    <script>
+        // Auto refresh activity feed every 10 seconds
+        function refreshActivity() {
+            const activities = [
+                'New payment transaction processed',
+                'NFT ticket minted successfully', 
+                'Block added to blockchain',
+                'Face verification completed',
+                'Transaction confirmed on chain',
+                'Blockchain network optimized'
+            ];
+            
+            const types = ['success', 'info', 'warning'];
+            const feed = document.querySelector('.activity-feed');
+            
+            if (feed) {
+                const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+                const randomType = types[Math.floor(Math.random() * types.length)];
+                
+                const newItem = document.createElement('div');
+                newItem.className = `activity-item activity-${randomType}`;
+                newItem.innerHTML = `
+                    <strong>${randomActivity}</strong>
+                    <small class="text-muted d-block">Just now</small>
+                `;
+                
+                feed.insertBefore(newItem, feed.firstChild);
+                
+                // Keep only 5 items
+                while (feed.children.length > 5) {
+                    feed.removeChild(feed.lastChild);
+                }
+            }
+        }
+        
+        // Start auto refresh
+        setInterval(refreshActivity, 10000);
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

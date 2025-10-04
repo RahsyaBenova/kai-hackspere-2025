@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h2>🎫 Detail Tiket</h2>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ ticket.passenger_name }}</h5>
+                    <p><strong>ID Tiket:</strong> {{ ticket.short_id }}</p>
+                    <p><strong>Kereta:</strong> {{ ticket.schedule.train_name }} ({{ ticket.schedule.train_number }})</p>
+                    <p><strong>Rute:</strong> {{ ticket.schedule.route.origin }} → {{ ticket.schedule.route.destination }}</p>
+                    <p><strong>Kelas:</strong> {{ ticket.travel_class }}</p>
+                    <p><strong>Kursi:</strong> {{ ticket.seat_number }}</p>
+                    <p><strong>Status:</strong> 
+                        <span class="badge bg-success">{{ ticket.status }}</span>
+                        {% if ticket.face_verified %}
+                        <span class="badge bg-info">Wajah Terverifikasi</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <h2>⛓️ Verifikasi Blockchain</h2>
+            <div class="card">
+                <div class="card-body">
+                    {% if blockchain_verified %}
+                    <div class="alert alert-success">
+                        <h5>✅ Tiket Terverifikasi di Blockchain</h5>
+                        <p>Tiket ini telah tercatat di blockchain dan terverifikasi keasliannya.</p>
+                    </div>
+                    
+                    {% if blockchain_data %}
+                    <div class="mt-3">
+                        <h6>Detail Blockchain:</h6>
+                        <p><strong>Block:</strong> #{{ blockchain_data.block_index }}</p>
+                        <p><strong>Tipe Transaksi:</strong> {{ blockchain_data.transaction_type }}</p>
+                        <p><strong>Timestamp:</strong> {{ blockchain_data.timestamp }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <h5>⚠️ Belum Terverifikasi di Blockchain</h5>
+                        <p>Tiket ini belum tercatat di blockchain.</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <h6>Fitur Blockchain:</h6>
+                        <ul class="list-unstyled">
+                            <li>✅ Transparansi penuh</li>
+                            <li>✅ Anti pemalsuan tiket</li>
+                            <li>✅ Catatan permanen</li>
+                            <li>✅ Verifikasi keaslian</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <a href="{{ url_for('main.ticket', ticket_id=ticket.id) }}" class="btn btn-primary">
+                    ← Kembali ke Detail Tiket
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

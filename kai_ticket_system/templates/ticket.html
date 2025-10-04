@@ -1,0 +1,640 @@
+{% extends "base.html" %}
+
+{% block title %}E-Ticket - KAI{% endblock %}
+
+{% block content %}
+<div class="step-indicator">
+    <div class="step completed">
+        <div class="step-number">1</div>
+        <div>Pesan Tiket</div>
+    </div>
+    <div class="step completed">
+        <div class="step-number">2</div>
+        <div>Verifikasi Wajah</div>
+    </div>
+    <div class="step active">
+        <div class="step-number">3</div>
+        <div>E-Ticket</div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <!-- Success Alert -->
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle fa-2x me-3"></i>
+                    <div>
+                        <h5 class="alert-heading mb-1">Pemesanan Berhasil!</h5>
+                        <p class="mb-0">Tiket elektronik Anda sudah siap. Simpan tiket ini untuk boarding.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Ticket Card -->
+            <div class="ticket-card">
+                <!-- Ticket Header -->
+                <div class="text-center mb-4">
+                    <div class="ticket-header mb-3">
+                        <i class="fas fa-train fa-3x text-primary mb-2"></i>
+                        <h2 class="text-primary mb-1">E-TICKET KAI</h2>
+                        <p class="text-muted">Tiket Elektronik - Anti Joki</p>
+                    </div>
+                </div>
+
+                <!-- Ticket Info -->
+                <div class="ticket-info mb-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label><i class="fas fa-ticket-alt me-2"></i>ID Tiket</label>
+                                <div class="info-value">{{ ticket.id[:8]|upper }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label><i class="fas fa-user me-2"></i>Nama Penumpang</label>
+                                <div class="info-value">{{ ticket.passenger_name }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label><i class="fas fa-route me-2"></i>Rute Perjalanan</label>
+                                <div class="info-value">{{ ticket.route.origin }} - {{ ticket.route.destination }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label><i class="fas fa-calendar me-2"></i>Tanggal Keberangkatan</label>
+                                <div class="info-value">{{ ticket.travel_date }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label><i class="fas fa-clock me-2"></i>Waktu Keberangkatan</label>
+                                <div class="info-value">{{ ticket.travel_time }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label><i class="fas fa-chair me-2"></i>Kelas</label>
+                                <div class="info-value">
+                                    <span class="badge bg-primary">{{ ticket.travel_class }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="info-item">
+                                <label><i class="fas fa-tag me-2"></i>Total Pembayaran</label>
+                                <div class="info-value text-success fw-bold">
+                                    Rp {{ "{:,}".format(ticket.total_price) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label><i class="fas fa-shield-alt me-2"></i>Status Verifikasi</label>
+                                <div class="info-value">
+                                    {% if ticket.face_verified %}
+                                    <span class="badge bg-success">Terverifikasi</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Belum Terverifikasi</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="info-item">
+                                <label><i class="fas fa-calendar me-2"></i>Waktu Penerbitan</label>
+                                <div class="info-value">{{ ticket.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QR Code Section -->
+                <div class="qr-section text-center mb-4">
+                    <div class="qr-header mb-3">
+                        <h4 class="text-primary">
+                            <i class="fas fa-qrcode me-2"></i>QR Code Boarding
+                        </h4>
+                        <p class="text-muted">Scan untuk verifikasi boarding</p>
+                    </div>
+                    
+                    {% if ticket.qr_code_data %}
+                    <div class="qr-container position-relative d-inline-block">
+                        <img src="data:image/png;base64,{{ ticket.qr_code_data }}" 
+                             alt="QR Code Boarding" 
+                             class="qr-code img-fluid border rounded shadow">
+                        <div class="qr-overlay">
+                            <div class="verified-badge">
+                                <i class="fas fa-check-circle"></i>
+                                Terverifikasi
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>QR Code tidak dapat digenerate</strong><br>
+                        <small>Silakan hubungi customer service</small>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-link me-2"></i>Blockchain Verification</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if blockchain_verified %}
+                        <div class="alert alert-success">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="mb-1">✅ Tiket Terverifikasi di Blockchain</h5>
+                                    <p class="mb-0">Tiket ini telah tercatat di blockchain dan terverifikasi keasliannya.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="/blockchain/explorer" class="btn btn-success">
+                            <i class="fas fa-external-link-alt me-2"></i>Lihat Detail Blockchain
+                        </a>
+                        {% else %}
+                        <div class="alert alert-secondary">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-link fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="mb-1">⛓️ Blockchain Verification</h5>
+                                    <p class="mb-0">Verifikasi keaslian tiket melalui teknologi blockchain.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="/blockchain/explorer" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-2"></i>Cek Status Blockchain
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Smart Contract Validation -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>Smart Contract Validation</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="smart-contract-status">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Validating ticket with smart contract...</p>
+                            </div>
+                        </div>
+                        
+                        <div id="smart-contract-details" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Validation Results:</h6>
+                                    <div id="validation-checks"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Contract Information:</h6>
+                                    <div id="contract-info"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <button class="btn btn-outline-primary btn-sm" onclick="validateTicket()">
+                                    <i class="fas fa-sync-alt me-1"></i>Re-validate
+                                </button>
+                                <button class="btn btn-outline-info btn-sm" onclick="mintNFT()">
+                                    <i class="fas fa-gem me-1"></i>Mint NFT
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Features -->
+                <div class="security-features mb-4">
+                    <h5 class="text-center mb-3">
+                        <i class="fas fa-shield-alt me-2"></i>Fitur Keamanan
+                    </h5>
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3">
+                            <div class="feature-item">
+                                <i class="fas fa-camera fa-2x text-primary mb-2"></i>
+                                <h6>Verifikasi Wajah</h6>
+                                <small class="text-muted">
+                                    {% if ticket.face_verified %}
+                                    Wajah sudah terverifikasi
+                                    {% else %}
+                                    Belum terverifikasi
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="feature-item">
+                                <i class="fas fa-qrcode fa-2x text-primary mb-2"></i>
+                                <h6>QR Code Digital</h6>
+                                <small class="text-muted">
+                                    {% if ticket.qr_code_data %}
+                                    Tersedia
+                                    {% else %}
+                                    Tidak tersedia
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="feature-item">
+                                <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                                <h6>Real-time</h6>
+                                <small class="text-muted">Update langsung</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="instructions alert alert-info">
+                    <h6 class="mb-3">
+                        <i class="fas fa-info-circle me-2"></i>Panduan Penggunaan Tiket
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ol class="mb-0">
+                                <li>Tunjukkan QR code di gerbang boarding</li>
+                                <li>Lakukan verifikasi wajah ulang</li>
+                                <li>Tunjukkan identitas jika diminta</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li>Datang 30 menit sebelum keberangkatan</li>
+                                <li>Simpan tiket hingga perjalanan selesai</li>
+                                <li>Jaga kerahasiaan QR code</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ticket Footer -->
+                <div class="ticket-footer text-center mt-4 pt-3 border-top">
+                    <small class="text-muted">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        Tiket ini berlaku sebagai bukti perjalanan yang sah
+                    </small>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            Diterbitkan: {{ ticket.created_at.strftime('%d/%m/%Y %H:%M') }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons text-center mt-4">
+                <div class="btn-group" role="group">
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>Cetak Tiket
+                    </button>
+                    <button onclick="downloadTicket()" class="btn btn-outline-primary">
+                        <i class="fas fa-download me-2"></i>Download
+                    </button>
+                    <a href="{{ url_for('home') }}" class="btn btn-kai-primary">
+                        <i class="fas fa-plus me-2"></i>Pesan Tiket Lain
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                {% if blockchain_verified %}
+                <div class="alert alert-success">
+                    <strong>✅ Terverifikasi di Blockchain</strong>
+                    <p class="mb-0">Tiket ini telah tercatat di blockchain dan terverifikasi keasliannya.</p>
+                    <a href="/blockchain/explorer" class="btn btn-sm btn-outline-success mt-2">
+                        Lihat Detail Blockchain
+                    </a>
+                </div>
+                {% else %}
+                <div class="alert alert-secondary">
+                    <strong>⛓️ Blockchain Verification</strong>
+                    <p class="mb-0">Verifikasi keaslian tiket melalui blockchain.</p>
+                    <a href="/blockchain/explorer" class="btn btn-sm btn-outline-primary mt-2">
+                        Cek Status Blockchain
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function downloadTicket() {
+    // Simple download functionality
+    const ticketContent = document.querySelector('.ticket-card').innerText;
+    const blob = new Blob([ticketContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ticket-{{ ticket.id[:8]|upper }}.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+// Smart Contract Functions
+function validateTicket() {
+    const ticketId = '{{ ticket.id }}';
+    const statusDiv = document.getElementById('smart-contract-status');
+    const detailsDiv = document.getElementById('smart-contract-details');
+    
+    // Show loading
+    statusDiv.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Validating ticket with smart contract...</p>
+        </div>
+    `;
+    detailsDiv.style.display = 'none';
+    
+    // Call validation API
+    fetch(`/api/smart-contract/validate/${ticketId}`)
+        .then(response => response.json())
+        .then(data => {
+            displayValidationResults(data);
+        })
+        .catch(error => {
+            console.error('Validation error:', error);
+            statusDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error validating ticket: ${error.message}
+                </div>
+            `;
+        });
+}
+
+function displayValidationResults(data) {
+    const statusDiv = document.getElementById('smart-contract-status');
+    const detailsDiv = document.getElementById('smart-contract-details');
+    const checksDiv = document.getElementById('validation-checks');
+    const contractDiv = document.getElementById('contract-info');
+    
+    if (data.valid) {
+        statusDiv.innerHTML = `
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Ticket Validated Successfully!</strong>
+                <p class="mb-0">Smart contract validation passed with ${data.validation_score || 0}% confidence.</p>
+            </div>
+        `;
+    } else {
+        statusDiv.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Validation Issues Detected</strong>
+                <p class="mb-0">Some validation checks failed. See details below.</p>
+            </div>
+        `;
+    }
+    
+    // Display validation checks
+    if (data.validation_checks) {
+        let checksHtml = '';
+        for (const [check, passed] of Object.entries(data.validation_checks)) {
+            const icon = passed ? 'fa-check-circle text-success' : 'fa-times-circle text-danger';
+            const label = check.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            checksHtml += `
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas ${icon} me-2"></i>
+                    <span>${label}</span>
+                </div>
+            `;
+        }
+        checksDiv.innerHTML = checksHtml;
+    }
+    
+    // Display contract info
+    contractDiv.innerHTML = `
+        <div class="small">
+            <p><strong>Contract:</strong> ${data.contract_address || 'N/A'}</p>
+            <p><strong>Gas Used:</strong> ${data.gas_used || 0}</p>
+            <p><strong>Block:</strong> ${data.block_number || 'N/A'}</p>
+            <p><strong>Timestamp:</strong> ${new Date(data.validation_timestamp).toLocaleString()}</p>
+        </div>
+    `;
+    
+    detailsDiv.style.display = 'block';
+}
+
+function mintNFT() {
+    const ticketId = '{{ ticket.id }}';
+    
+    if (!confirm('Mint NFT for this ticket? This will create a unique digital collectible.')) {
+        return;
+    }
+    
+    fetch(`/api/smart-contract/mint-nft/${ticketId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`NFT minted successfully!\nToken ID: ${data.nft_token_id}\nTransaction: ${data.transaction_hash}`);
+            // Refresh validation to show updated status
+            validateTicket();
+        } else {
+            alert(`NFT minting failed: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('NFT minting error:', error);
+        alert(`Error minting NFT: ${error.message}`);
+    });
+}
+
+// Auto-validate on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a bit then auto-validate
+    setTimeout(validateTicket, 1000);
+});
+
+// Add some interactive effects
+document.addEventListener('DOMContentLoaded', function() {
+    const qrCode = document.querySelector('.qr-code');
+    if (qrCode) {
+        qrCode.addEventListener('click', function() {
+            this.classList.toggle('qr-zoomed');
+        });
+    }
+});
+</script>
+
+<style>
+.ticket-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #0056b3;
+    border-radius: 20px;
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.ticket-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(135deg, #0056b3, #ff6b00);
+}
+
+.ticket-header h2 {
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.info-item {
+    padding: 0.5rem 0;
+}
+
+.info-item label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.info-value {
+    font-weight: 600;
+    color: #343a40;
+    font-size: 1rem;
+}
+
+.qr-container {
+    position: relative;
+    padding: 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.qr-code {
+    max-width: 250px;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.qr-code.qr-zoomed {
+    transform: scale(1.5);
+    z-index: 1000;
+    position: relative;
+}
+
+.qr-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.verified-badge {
+    background: #28a745;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.feature-item {
+    padding: 1rem;
+}
+
+.feature-item h6 {
+    margin: 0.5rem 0 0.25rem;
+    font-weight: 600;
+}
+
+.instructions ol, .instructions ul {
+    padding-left: 1.5rem;
+    margin-bottom: 0;
+}
+
+.instructions li {
+    margin-bottom: 0.5rem;
+}
+
+.ticket-footer {
+    border-top: 1px dashed #dee2e6 !important;
+}
+
+.action-buttons .btn-group {
+    gap: 0.5rem;
+}
+
+.action-buttons .btn {
+    border-radius: 25px;
+}
+
+/* Print Styles */
+@media print {
+    .navbar, .footer, .step-indicator, .action-buttons {
+        display: none !important;
+    }
+    
+    .ticket-card {
+        border: 2px solid #000 !important;
+        box-shadow: none !important;
+    }
+    
+    .alert-success {
+        border: 1px solid #000 !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .ticket-card {
+        padding: 1.5rem;
+    }
+    
+    .action-buttons .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

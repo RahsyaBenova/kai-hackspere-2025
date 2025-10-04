@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Pesan Tiket - KAI{% endblock %}
+
+{% block content %}
+<div class="step-indicator">
+    <div class="step active">
+        <div class="step-number">1</div>
+        <div>Pesan Tiket</div>
+    </div>
+    <div class="step">
+        <div class="step-number">2</div>
+        <div>Verifikasi Wajah</div>
+    </div>
+    <div class="step">
+        <div class="step-number">3</div>
+        <div>E-Ticket</div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-ticket-alt me-2"></i>Form Pemesanan Tiket</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('booking') }}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="route_id" class="form-label">Pilih Rute</label>
+                                <select class="form-select" id="route_id" name="route_id" required>
+                                    <option value="">Pilih Rute...</option>
+                                    {% for route in routes %}
+                                    <option value="{{ route.id }}" data-price="{{ route.base_price }}">
+                                        {{ route.origin }} - {{ route.destination }} (Rp {{ "{:,}".format(route.base_price) }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="travel_class" class="form-label">Kelas</label>
+                                <select class="form-select" id="travel_class" name="travel_class" required>
+                                    <option value="">Pilih Kelas...</option>
+                                    <option value="Ekonomi">Ekonomi</option>
+                                    <option value="Bisnis">Bisnis</option>
+                                    <option value="Eksekutif">Eksekutif</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="travel_date" class="form-label">Tanggal Keberangkatan</label>
+                                <input type="date" class="form-control" id="travel_date" name="travel_date" 
+                                       min="{{ min_date }}" max="{{ max_date }}" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="travel_time" class="form-label">Waktu Keberangkatan</label>
+                                <select class="form-select" id="travel_time" name="travel_time" required>
+                                    <option value="">Pilih Waktu...</option>
+                                    {% for time in available_times %}
+                                    <option value="{{ time }}">{{ time }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="passenger_name" class="form-label">Nama Lengkap Penumpang</label>
+                                <input type="text" class="form-control" id="passenger_name" name="passenger_name" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="passenger_email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="passenger_email" name="passenger_email">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="passenger_phone" class="form-label">Nomor Telepon</label>
+                                <input type="tel" class="form-control" id="passenger_phone" name="passenger_phone">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Total Harga</label>
+                                <div class="form-control bg-light">
+                                    <strong id="price_display">Rp 0</strong>
+                                </div>
+                                <input type="hidden" id="final_price" name="final_price" value="0">
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-4">
+                            <h6><i class="fas fa-info-circle me-2"></i>Informasi Penting</h6>
+                            <small>
+                                - Setelah pemesanan, Anda akan melakukan verifikasi wajah<br>
+                                - Tiket hanya berlaku untuk penumpang yang terdaftar<br>
+                                - Pembatalan tiket mengikuti ketentuan yang berlaku
+                            </small>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-kai-primary btn-lg px-5">
+                                Lanjut ke Verifikasi <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const routeSelect = document.getElementById('route_id');
+    const priceDisplay = document.getElementById('price_display');
+    const finalPrice = document.getElementById('final_price');
+    
+    function updatePrice() {
+        const selectedOption = routeSelect.options[routeSelect.selectedIndex];
+        const price = selectedOption ? selectedOption.getAttribute('data-price') : 0;
+        
+        if (price) {
+            const formattedPrice = new Intl.NumberFormat('id-ID').format(price);
+            priceDisplay.textContent = `Rp ${formattedPrice}`;
+            finalPrice.value = price;
+        } else {
+            priceDisplay.textContent = 'Rp 0';
+            finalPrice.value = '0';
+        }
+    }
+    
+    routeSelect.addEventListener('change', updatePrice);
+    
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('travel_date').min = today;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2>⛓️ Blockchain Explorer</h2>
+    
+    <!-- Blockchain Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Blocks</h5>
+                    <h2>{{ stats.total_blocks }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Total Transaksi</h5>
+                    <h2>{{ stats.total_transactions }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Tiket NFT</h5>
+                    <h2>{{ stats.nft_transactions }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Pending</h5>
+                    <h2>{{ stats.pending_transactions }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blockchain Blocks -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Blockchain Blocks</h5>
+        </div>
+        <div class="card-body">
+            {% if blockchain_data.chain %}
+                {% for block in blockchain_data.chain %}
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong>Block #{{ block.index }}</strong>
+                        <small class="text-muted">{{ block.timestamp }}</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Previous Hash:</strong> 
+                                    <code class="text-truncate d-inline-block" style="max-width: 200px;">
+                                        {{ block.previous_hash }}
+                                    </code>
+                                </p>
+                                <p><strong>Proof:</strong> {{ block.proof }}</p>
+                                <p><strong>Merkle Root:</strong> 
+                                    <code class="text-truncate d-inline-block" style="max-width: 200px;">
+                                        {{ block.merkle_root }}
+                                    </code>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Transactions:</strong> {{ block.transactions|length }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if block.transactions %}
+                        <div class="mt-3">
+                            <h6>Transactions:</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Ticket ID</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for tx in block.transactions %}
+                                        <tr>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if tx.type == 'NFT_MINT' %}bg-success
+                                                    {% elif tx.type == 'PAYMENT' %}bg-primary
+                                                    {% elif tx.type == 'FACE_VERIFICATION' %}bg-info
+                                                    {% else %}bg-secondary{% endif %}">
+                                                    {{ tx.type if tx.type else 'PAYMENT' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if tx.ticket_id %}
+                                                <small>{{ tx.ticket_id[:8] }}...</small>
+                                                {% else %}-{% endif %}
+                                            </td>
+                                            <td>
+                                                {% if tx.amount %}
+                                                Rp {{ "{:,.0f}".format(tx.amount) }}
+                                                {% else %}-{% endif %}
+                                            </td>
+                                            <td>{{ tx.status if tx.status else 'CONFIRMED' }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">No blocks in blockchain yet</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

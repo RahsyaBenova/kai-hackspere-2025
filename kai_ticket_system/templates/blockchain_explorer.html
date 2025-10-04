@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Blockchain Explorer - KAI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-link me-2"></i>KAI Blockchain Explorer</h2>
+                <div class="blockchain-status">
+                    <span class="badge bg-success me-2">
+                        <i class="fas fa-circle me-1"></i>Online
+                    </span>
+                    <span class="badge bg-info">
+                        <i class="fas fa-cube me-1"></i>{{ stats.total_blocks }} Blocks
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blockchain Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ stats.total_blocks }}</h5>
+                    <p class="card-text">Total Blocks</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success">{{ stats.total_transactions }}</h5>
+                    <p class="card-text">Total Transactions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">{{ stats.payment_transactions }}</h5>
+                    <p class="card-text">Payment Transactions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-info">{{ stats.nft_transactions }}</h5>
+                    <p class="card-text">NFT Transactions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-search me-2"></i>Search Transactions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search-input" placeholder="Search by ticket ID, payment ID, or transaction hash">
+                        <button class="btn btn-outline-primary" onclick="searchTransactions()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Filter by Type</h6>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary active" onclick="filterTransactions('all')">All</button>
+                        <button type="button" class="btn btn-outline-success" onclick="filterTransactions('PAYMENT')">Payments</button>
+                        <button type="button" class="btn btn-outline-info" onclick="filterTransactions('NFT_MINT')">NFTs</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blockchain Chain -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-cubes me-2"></i>Blockchain Chain</h6>
+                </div>
+                <div class="card-body">
+                    {% if chain_data.chain %}
+                    <div class="blockchain-chain">
+                        {% for block in chain_data.chain %}
+                        <div class="block-item mb-3" data-block-index="{{ block.index }}">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">Block #{{ block.index }}</h6>
+                                        <small class="text-muted">{{ block.timestamp }}</small>
+                                    </div>
+                                    <div class="block-hash">
+                                        <small class="font-monospace">{{ block.previous_hash[:16] }}...</small>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Proof:</strong> {{ block.proof }}</p>
+                                            <p><strong>Merkle Root:</strong> 
+                                                <span class="font-monospace">{{ block.merkle_root[:16] }}...</span>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Transactions:</strong> {{ block.transactions|length }}</p>
+                                            <p><strong>Previous Hash:</strong> 
+                                                <span class="font-monospace">{{ block.previous_hash[:16] }}...</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Transactions in Block -->
+                                    {% if block.transactions %}
+                                    <div class="transactions-section mt-3">
+                                        <h6>Transactions:</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Type</th>
+                                                        <th>Ticket ID</th>
+                                                        <th>Amount</th>
+                                                        <th>Status</th>
+                                                        <th>Timestamp</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for tx in block.transactions %}
+                                                    <tr class="transaction-row" data-tx-type="{{ tx.type }}">
+                                                        <td>
+                                                            <span class="badge 
+                                                                {% if tx.type == 'PAYMENT' %}bg-success
+                                                                {% elif tx.type == 'NFT_MINT' %}bg-info
+                                                                {% else %}bg-secondary{% endif %}">
+                                                                {{ tx.type }}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="font-monospace">{{ tx.ticket_id[:8] }}...</span>
+                                                        </td>
+                                                        <td>
+                                                            {% if tx.amount %}
+                                                            Rp {{ "{:,}".format(tx.amount) }}
+                                                            {% else %}
+                                                            -
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-success">{{ tx.status }}</span>
+                                                        </td>
+                                                        <td>
+                                                            <small>{{ tx.timestamp }}</small>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-cube fa-3x text-muted mb-3"></i>
+                        <h5>No Blocks Found</h5>
+                        <p class="text-muted">The blockchain is empty or not initialized.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Performance Metrics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="metric-item">
+                                <h6>Cache Hit Rate</h6>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" style="width: {{ (chain_data.performance_metrics.cache_hit_rate * 100)|round(1) }}%">
+                                        {{ (chain_data.performance_metrics.cache_hit_rate * 100)|round(1) }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-item">
+                                <h6>Average Block Size</h6>
+                                <p class="mb-0 text-primary fw-bold">{{ chain_data.performance_metrics.average_block_size|round(2) }} transactions</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-item">
+                                <h6>Pending Transactions</h6>
+                                <p class="mb-0 text-warning fw-bold">{{ chain_data.performance_metrics.pending_transaction_count }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-item">
+                                <h6>Transaction Speed</h6>
+                                <p class="mb-0 text-info fw-bold">{{ chain_data.performance_metrics.transaction_speed }} seconds</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function searchTransactions() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const transactionRows = document.querySelectorAll('.transaction-row');
+    
+    transactionRows.forEach(row => {
+        const ticketId = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        const type = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+        
+        if (ticketId.includes(searchTerm) || type.includes(searchTerm)) {
+            row.style.display = '';
+            row.closest('.block-item').style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function filterTransactions(type) {
+    // Update active button
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    const transactionRows = document.querySelectorAll('.transaction-row');
+    
+    transactionRows.forEach(row => {
+        const txType = row.getAttribute('data-tx-type');
+        
+        if (type === 'all' || txType === type) {
+            row.style.display = '';
+            row.closest('.block-item').style.display = '';
+        } else {
+            row.style.display = 'none';
+            // Hide block if no visible transactions
+            const block = row.closest('.block-item');
+            const visibleRows = block.querySelectorAll('.transaction-row:not([style*="display: none"])');
+            if (visibleRows.length === 0) {
+                block.style.display = 'none';
+            }
+        }
+    });
+}
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+    // In a real implementation, you would fetch new data from the server
+    console.log('Auto-refreshing blockchain data...');
+}, 30000);
+</script>
+
+<style>
+.blockchain-chain {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.block-item {
+    border-left: 4px solid #007bff;
+    padding-left: 1rem;
+}
+
+.block-item:last-child {
+    border-left-color: #28a745;
+}
+
+.transaction-row:hover {
+    background-color: #f8f9fa;
+}
+
+.metric-item {
+    text-align: center;
+}
+
+.metric-item h6 {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.font-monospace {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    background-color: #e9ecef;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+}
+
+.blockchain-status .badge {
+    font-size: 0.8rem;
+}
+
+.progress {
+    height: 20px;
+}
+
+.progress-bar {
+    line-height: 20px;
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}

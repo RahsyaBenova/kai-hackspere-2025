@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block title %}Connect Wallet - KAI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-wallet me-2"></i>Connect Your Crypto Wallet</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>Why Connect Your Wallet?</h6>
+                        <ul class="mb-0">
+                            <li>Make secure blockchain payments for train tickets</li>
+                            <li>Receive NFT tickets as digital collectibles</li>
+                            <li>Enjoy full transparency in all transactions</li>
+                            <li>Access exclusive blockchain features</li>
+                        </ul>
+                    </div>
+
+                    <!-- Wallet Options -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card wallet-option" onclick="connectWallet('metamask')">
+                                <div class="card-body text-center">
+                                    <img src="https://raw.githubusercontent.com/MetaMask/brand-resources/master/SVG/metamask-fox.svg" 
+                                         alt="MetaMask" class="wallet-icon mb-3">
+                                    <h5>MetaMask</h5>
+                                    <p class="text-muted">Most popular Ethereum wallet</p>
+                                    <div class="wallet-features">
+                                        <small class="text-success">✓ Ethereum Support</small><br>
+                                        <small class="text-success">✓ NFT Compatible</small><br>
+                                        <small class="text-success">✓ Mobile App</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="card wallet-option" onclick="connectWallet('walletconnect')">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+                                    <h5>WalletConnect</h5>
+                                    <p class="text-muted">Connect any mobile wallet</p>
+                                    <div class="wallet-features">
+                                        <small class="text-success">✓ Multi-Wallet Support</small><br>
+                                        <small class="text-success">✓ QR Code Connection</small><br>
+                                        <small class="text-success">✓ Cross-Platform</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connected Wallet Status -->
+                    <div id="wallet-status" class="mt-4" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-check-circle text-success me-2"></i>Wallet Connected</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Wallet Address:</strong></p>
+                                        <p class="font-monospace" id="wallet-address">-</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Network:</strong></p>
+                                        <p id="network-name">-</p>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <p><strong>Balance:</strong></p>
+                                        <p id="wallet-balance">-</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Status:</strong></p>
+                                        <span class="badge bg-success" id="connection-status">Connected</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button class="btn btn-outline-danger" onclick="disconnectWallet()">
+                                        <i class="fas fa-unlink me-1"></i>Disconnect Wallet
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wallet Benefits -->
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                                <h6>Enhanced Security</h6>
+                                <small class="text-muted">Your private keys never leave your device</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <i class="fas fa-eye fa-2x text-info mb-2"></i>
+                                <h6>Full Transparency</h6>
+                                <small class="text-muted">All transactions are publicly verifiable</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <i class="fas fa-gem fa-2x text-primary mb-2"></i>
+                                <h6>NFT Tickets</h6>
+                                <small class="text-muted">Receive unique digital ticket collectibles</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('booking') }}" class="btn btn-kai-primary btn-lg">
+                            <i class="fas fa-ticket-alt me-2"></i>Book Ticket with Blockchain
+                        </a>
+                        <a href="{{ url_for('blockchain_explorer') }}" class="btn btn-outline-primary btn-lg ms-2">
+                            <i class="fas fa-link me-2"></i>View Blockchain Explorer
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+<script>
+let web3 = null;
+let userAccount = null;
+let userBalance = null;
+
+// Check if wallet is already connected
+document.addEventListener('DOMContentLoaded', function() {
+    checkWalletConnection();
+});
+
+function checkWalletConnection() {
+    if (typeof window.ethereum !== 'undefined') {
+        web3 = new Web3(window.ethereum);
+        
+        // Check if already connected
+        window.ethereum.request({ method: 'eth_accounts' })
+            .then(accounts => {
+                if (accounts.length > 0) {
+                    userAccount = accounts[0];
+                    showWalletStatus();
+                    getWalletInfo();
+                }
+            })
+            .catch(error => {
+                console.log('No wallet connected:', error);
+            });
+    }
+}
+
+function connectWallet(walletType) {
+    if (walletType === 'metamask') {
+        if (typeof window.ethereum !== 'undefined') {
+            window.ethereum.request({ method: 'eth_requestAccounts' })
+                .then(accounts => {
+                    if (accounts.length > 0) {
+                        userAccount = accounts[0];
+                        showWalletStatus();
+                        getWalletInfo();
+                        showSuccessMessage('Wallet connected successfully!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Wallet connection error:', error);
+                    showErrorMessage('Failed to connect wallet: ' + error.message);
+                });
+        } else {
+            showErrorMessage('MetaMask not detected. Please install MetaMask first.');
+        }
+    } else if (walletType === 'walletconnect') {
+        showInfoMessage('WalletConnect integration coming soon! Use MetaMask for now.');
+    }
+}
+
+function showWalletStatus() {
+    document.getElementById('wallet-status').style.display = 'block';
+    document.getElementById('wallet-address').textContent = 
+        userAccount.substring(0, 6) + '...' + userAccount.substring(38);
+}
+
+function getWalletInfo() {
+    if (web3 && userAccount) {
+        // Get balance
+        web3.eth.getBalance(userAccount)
+            .then(balance => {
+                userBalance = web3.utils.fromWei(balance, 'ether');
+                document.getElementById('wallet-balance').textContent = 
+                    parseFloat(userBalance).toFixed(4) + ' ETH';
+            })
+            .catch(error => {
+                console.error('Error getting balance:', error);
+                document.getElementById('wallet-balance').textContent = 'Error';
+            });
+
+        // Get network
+        web3.eth.getChainId()
+            .then(chainId => {
+                const networkName = getNetworkName(chainId);
+                document.getElementById('network-name').textContent = networkName;
+            })
+            .catch(error => {
+                console.error('Error getting network:', error);
+                document.getElementById('network-name').textContent = 'Unknown';
+            });
+    }
+}
+
+function getNetworkName(chainId) {
+    const networks = {
+        1: 'Ethereum Mainnet',
+        3: 'Ropsten Testnet',
+        4: 'Rinkeby Testnet',
+        5: 'Goerli Testnet',
+        42: 'Kovan Testnet',
+        137: 'Polygon Mainnet',
+        80001: 'Polygon Mumbai Testnet'
+    };
+    return networks[chainId] || `Network ${chainId}`;
+}
+
+function disconnectWallet() {
+    userAccount = null;
+    userBalance = null;
+    web3 = null;
+    document.getElementById('wallet-status').style.display = 'none';
+    showInfoMessage('Wallet disconnected successfully!');
+}
+
+function showSuccessMessage(message) {
+    showAlert(message, 'success');
+}
+
+function showErrorMessage(message) {
+    showAlert(message, 'danger');
+}
+
+function showInfoMessage(message) {
+    showAlert(message, 'info');
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Listen for account changes
+if (typeof window.ethereum !== 'undefined') {
+    window.ethereum.on('accountsChanged', function(accounts) {
+        if (accounts.length === 0) {
+            disconnectWallet();
+        } else {
+            userAccount = accounts[0];
+            showWalletStatus();
+            getWalletInfo();
+        }
+    });
+}
+</script>
+
+<style>
+.wallet-option {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.wallet-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-color: var(--kai-primary);
+}
+
+.wallet-icon {
+    width: 48px;
+    height: 48px;
+}
+
+.wallet-features {
+    margin-top: 1rem;
+}
+
+.font-monospace {
+    font-family: 'Courier New', monospace;
+    background-color: #e9ecef;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9rem;
+}
+
+#wallet-status .card {
+    border-left: 4px solid #28a745;
+}
+</style>
+{% endblock %}

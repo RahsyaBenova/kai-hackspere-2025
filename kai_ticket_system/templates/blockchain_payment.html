@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h2>🔗 Payment dengan Blockchain</h2>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Detail Tiket</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Penumpang:</strong> {{ ticket.passenger_name }}</p>
+                            <p><strong>NIK:</strong> {{ ticket.passenger_nik }}</p>
+                            <p><strong>Rute:</strong> {{ ticket.schedule.route.origin }} → {{ ticket.schedule.route.destination }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Kereta:</strong> {{ ticket.schedule.train_name }}</p>
+                            <p><strong>Kelas:</strong> {{ ticket.travel_class }}</p>
+                            <p><strong>Total:</strong> <span class="text-success fw-bold">Rp {{ "{:,}".format(ticket.total_price) }}</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success mt-3">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Verifikasi Wajah Berhasil!</strong> Silakan lanjutkan pembayaran.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Pembayaran Blockchain</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Pilih Blockchain Network</label>
+                            <select name="blockchain_type" class="form-select" required>
+                                <option value="ethereum">Ethereum Mainnet</option>
+                                <option value="polygon">Polygon</option>
+                                <option value="binance">Binance Smart Chain</option>
+                                <option value="solana">Solana</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Wallet Address</label>
+                            <input type="text" name="wallet_address" class="form-control" 
+                                   placeholder="0x742d35Cc6634C0532925a3b8D..." required>
+                            <div class="form-text">Masukkan alamat wallet Anda untuk transaksi</div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <h6>📋 Informasi Pembayaran:</h6>
+                            <ul class="mb-0">
+                                <li>Transaksi akan tercatat permanen di blockchain</li>
+                                <li>Tiket akan menjadi NFT digital</li>
+                                <li>Proses: 15-30 detik</li>
+                                <li>Gas fee: ~$2-5 (tergantung network)</li>
+                            </ul>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-link me-2"></i>
+                            Bayar dengan Blockchain - Rp {{ "{:,}".format(ticket.total_price) }}
+                        </button>
+                    </form>
+                    
+                    <div class="mt-3 text-center">
+                        <a href="{{ url_for('payment.payment_page', ticket_id=ticket.id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-credit-card me-2"></i>
+                            Bayar dengan Kartu Kredit (Traditional)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">⛓️ Keuntungan Blockchain</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-shield-alt text-success me-3 fa-lg"></i>
+                        <div>
+                            <h6 class="mb-1">Anti Penipuan</h6>
+                            <small class="text-muted">Tiket tercatat permanen</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-bolt text-warning me-3 fa-lg"></i>
+                        <div>
+                            <h6 class="mb-1">Transaksi Cepat</h6>
+                            <small class="text-muted">15-30 detik konfirmasi</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-eye text-info me-3 fa-lg"></i>
+                        <div>
+                            <h6 class="mb-1">Transparan</h6>
+                            <small class="text-muted">Bisa diverifikasi publik</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-gem text-primary me-3 fa-lg"></i>
+                        <div>
+                            <h6 class="mb-1">NFT Digital</h6>
+                            <small class="text-muted">Tiket menjadi koleksi</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-body text-center">
+                    <h6>Status Verifikasi</h6>
+                    <div class="mb-2">
+                        <span class="badge bg-success">✅ Wajah Terverifikasi</span>
+                    </div>
+                    <div>
+                        <span class="badge bg-warning">⏳ Menunggu Pembayaran</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
